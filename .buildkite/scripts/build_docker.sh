@@ -52,3 +52,5 @@ buildkite-agent artifact upload $TAG_FILE_NAME
 # buildkite-agent meta-data set "VLLM_COMMIT_HASH" "${VLLM_COMMIT_HASH}"
 # buildkite-agent meta-data set "TPU_COMMONS_COMMIT_HASH" "${BUILDKITE_COMMIT}"
 
+echo "--- Cleanup Docker Image ---"
+docker rmi -f "${IMAGE_TAG}"

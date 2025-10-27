@@ -11,6 +11,39 @@ if [ "$#" -eq 0 ]; then
   exit 1
 fi
 
+cleanup() {
+  echo "--- Cleanup docker container and image ---"
+  # Get all unique image IDs for the repository 'vllm-tpu'
+  old_images=$(docker images ${IMAGE_TAG%:*} -q | uniq)
+  total_containers=""
+
+  if [ -n "$old_images" ]; then
+    echo "Found old vllm-tpu images. Checking for dependent containers..."
+    # Loop through each image ID and find any containers (running or not) using it.
+    for img_id in $old_images; do
+      echo "find $img_id..."
+      total_containers="$total_containers $(docker ps -a -q --filter "ancestor=$IMAGE_TAG")"
+    done
+
+    # Remove any found containers
+    if [ -n "$total_containers" ]; then
+      echo "Removing leftover containers using vllm-tpu image(s)..."
+      for container_id in $total_containers; do
+        echo "try removing $container_id..."
+        docker rm -f "$container_id" || true
+      done
+    fi
+
+    echo "Removing old vllm-tpu image..."
+    docker rmi -f "$IMAGE_TAG"
+  else
+    echo "No vllm-tpu images found to clean up."
+  fi
+
+  docker rmi -f ${IMAGE_TAG} || true
+  echo "Cleanup complete."
+}
+
 ENV_VARS=(
   -e TEST_MODEL="${TEST_MODEL:-}"
   -e MINIMUM_ACCURACY_THRESHOLD="${MINIMUM_ACCURACY_THRESHOLD:-}"
@@ -58,50 +91,17 @@ DOCKER_HF_HOME="/tmp/hf_home"
 
 # (TODO): Consider creating a remote registry to cache and share between agents.
 # Subsequent builds on the same host should be cached.
-
-# Cleanup of existing containers and images.
-echo "Starting cleanup for vllm-tpu..."
-# Get all unique image IDs for the repository 'vllm-tpu'
-old_images=$(docker images vllm-tpu -q | uniq)
-total_containers=""
-
-if [ -n "$old_images" ]; then
-    echo "Found old vllm-tpu images. Checking for dependent containers..."
-    # Loop through each image ID and find any containers (running or not) using it.
-    for img_id in $old_images; do
-        total_containers="$total_containers $(docker ps -a -q --filter "ancestor=$img_id")"
-    done
-
-    # Remove any found containers
-    if [ -n "$total_containers" ]; then
-        echo "Removing leftover containers using vllm-tpu image(s)..."
-        echo "$total_containers" | xargs -n1 | sort -u | xargs -r docker rm -f
-    fi
-
-    echo "Removing old vllm-tpu image(s)..."
-    docker rmi -f "$old_images"
-else
-    echo "No vllm-tpu images found to clean up."
-fi
-
-echo "Pruning old Docker build cache..."
-docker builder prune -f
-
-echo "Cleanup complete."
-
-# IMAGE_NAME="vllm-tpu"
-# docker build --no-cache -f docker/Dockerfile -t "${IMAGE_NAME}:${BUILDKITE_COMMIT}" .
 export LOCATION="us-central1"
 gcloud auth configure-docker ${LOCATION}-docker.pkg.dev -q
-
 export TAG_FILE_NAME="vllm_image_tag"
 buildkite-agent artifact download $TAG_FILE_NAME .
 export IMAGE_TAG=$(cat $TAG_FILE_NAME)
 
 if [ -z "$IMAGE_TAG" ]; then
-    echo "Error: Can't get Image Tag"
-    exit 1
+  echo "Error: Can't get Image Tag"
+  exit 1
 fi
+trap cleanup EXIT
 
 echo "Image to pull: ${IMAGE_TAG}"
 docker pull "${IMAGE_TAG}"

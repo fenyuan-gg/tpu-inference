@@ -35,13 +35,11 @@ cleanup() {
     fi
 
     echo "Removing old vllm-tpu image..."
-    docker rmi -f "$IMAGE_TAG"
+    docker rmi -f "$IMAGE_TAG" || true
+    echo "Cleanup complete."
   else
     echo "No vllm-tpu images found to clean up."
   fi
-
-  docker rmi -f ${IMAGE_TAG} || true
-  echo "Cleanup complete."
 }
 
 ENV_VARS=(
@@ -108,7 +106,7 @@ docker pull "${IMAGE_TAG}"
 
 echo "--- Running Docker Container ---"
 
-exec docker run \
+docker run \
   --privileged \
   --net host \
   --shm-size=16G \

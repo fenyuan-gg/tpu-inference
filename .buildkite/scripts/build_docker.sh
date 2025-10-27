@@ -7,6 +7,8 @@
 set -euo pipefail
 
 cleanup() {
+  echo "--- Cleanup Docker Image ---"
+  docker rmi -f "${IMAGE_TAG}"
   echo "--- Running Cleanup for Job ${BUILDKITE_JOB_ID} ---"
   docker image prune -a -f --filter "label=buildkite-job-id=${BUILDKITE_JOB_ID}"
 }
@@ -51,6 +53,3 @@ echo "${IMAGE_TAG}" > $TAG_FILE_NAME
 buildkite-agent artifact upload $TAG_FILE_NAME
 # buildkite-agent meta-data set "VLLM_COMMIT_HASH" "${VLLM_COMMIT_HASH}"
 # buildkite-agent meta-data set "TPU_COMMONS_COMMIT_HASH" "${BUILDKITE_COMMIT}"
-
-echo "--- Cleanup Docker Image ---"
-docker rmi -f "${IMAGE_TAG}"

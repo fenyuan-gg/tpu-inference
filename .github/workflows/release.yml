@@ -67,7 +67,11 @@ jobs:
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        repository-url: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://test.pypi.org/legacy/' }}
+        repository-url: >- 
+          ${{ 
+            (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) && 'https://upload.pypi.org/legacy/' ||
+            (github.event_name == 'workflow_dispatch' && inputs.repository) || 'https://test.pypi.org/legacy/' 
+          }}
 
     - name: Publish completed message
       run: echo "---Build and publish completed successfully.---"

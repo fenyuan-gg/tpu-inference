@@ -56,6 +56,15 @@ elif [[ "$GH_EVENT_NAME" == "push" && "$GH_REF" == refs/tags/* ]]; then
     TAG_NAME="$GH_REF_NAME"
     VERSION=${TAG_NAME#v} 
 
+# --- PUSH BRANCH TRIGGER ---
+elif [[ "$GH_EVENT_NAME" == "push" && "$GH_REF" == refs/heads/* ]]; then
+    echo "Trigger: Push Branch (${GH_REF_NAME}) - Defaulting to nightly 0.1.0 base"
+    RELEASE_TYPE="nightly"
+    BASE_VERSION="0.1.0"
+    echo "Using default BASE_VERSION=${BASE_VERSION}"
+    DATETIME_STR=$(date -u +%Y%m%d%H%M)
+    VERSION="${BASE_VERSION}.dev${DATETIME_STR}"
+
 # --- ERROR HANDLING ---
 else
     echo "Error: Unknown or unsupported trigger."
@@ -63,6 +72,6 @@ else
 fi
 
 # --- output ---
-echo "Final determined values: RELEASE_TYPE=${RELEASE_TYPE:-stable}, VERSION=${VERSION}"
-echo "RELEASE_TYPE=${RELEASE_TYPE:-stable}" >> $GITHUB_OUTPUT
+echo "Final determined values: RELEASE_TYPE=${RELEASE_TYPE:-nightly}, VERSION=${VERSION}"
+echo "RELEASE_TYPE=${RELEASE_TYPE:-nightly}" >> $GITHUB_OUTPUT
 echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT

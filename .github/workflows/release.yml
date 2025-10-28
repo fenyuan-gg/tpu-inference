@@ -3,7 +3,9 @@ name: Publish Package to PyPI/TestPyPI
 on:
   push:
     tags:
-      - '*+[0-9]+.[0-9]+.[0-9]+*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  schedule:
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       repository:
@@ -11,10 +13,9 @@ on:
         required: false
         default: 'https://test.pypi.org/legacy/'
       release_type:
-        description: 'Release type (Enter nightly or leave blank)'
-        required: false
-        options:
-          - nightly
+        description: 'Release type (Enter nightly or stable)'
+        required: true
+        default: "nightly"
       version:
         description: "Version"
         required: true
@@ -41,14 +42,24 @@ jobs:
       with:
         python-version: '3.x'
 
+    - name: Determine Release Type and Version
+      id: vars
+      env:
+          GH_EVENT_NAME: ${{ github.event_name }}
+          INPUT_RELEASE_TYPE: ${{ inputs.release_type }}
+          INPUT_VERSION: ${{ inputs.version }}
+          GH_REF_NAME: ${{ github.ref_name }}
+          GH_REF: ${{ github.ref }}
+      run: bash .github/scripts/determine_release_vars.sh
+
     - name: Install dependencies (build)
       run:
         python3 -m pip install build
 
     - name: Build package (sdist and wheel)
       env:
-          RELEASE_TYPE: ${{ inputs.release_type }}
-          VERSION: ${{ inputs.version }}
+          RELEASE_TYPE: ${{ steps.vars.outputs.RELEASE_TYPE }}
+          VERSION: ${{ steps.vars.outputs.VERSION }}
       run: python3 -m build
 
     - name: Publish package distributions to PyPI

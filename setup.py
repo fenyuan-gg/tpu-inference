@@ -4,7 +4,6 @@ import os
 from typing import List
 
 from setuptools import find_packages, setup
-from version import get_version
 
 ROOT_DIR = os.path.dirname(__file__)
 
@@ -38,7 +37,7 @@ def get_requirements() -> List[str]:
 
 setup(
     name="tpu_inference",
-    version=get_version(),
+    version=os.environ.get('VERSION'),
     description="",
     long_description=open("README.md").read() if hasattr(
         open("README.md"), "read") else "",

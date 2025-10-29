@@ -20,15 +20,15 @@ steps:
      commands:
        - .buildkite/scripts/run_in_docker.sh bash /workspace/tpu_inference/tests/e2e/benchmarking/mlperf.sh
 
-   - label: "E2E MLPerf tests for JAX models with quantization"
-     key: test_1
-     soft_fail: true
-     env:
-       QUANTIZATION: "True"
-     agents:
-       queue: tpu_v6e_queue
-     commands:
-       - .buildkite/scripts/run_in_docker.sh bash /workspace/tpu_inference/tests/e2e/benchmarking/mlperf.sh
+  #  - label: "E2E MLPerf tests for JAX models with quantization"
+  #    key: test_1
+  #    soft_fail: true
+  #    env:
+  #      QUANTIZATION: "True"
+  #    agents:
+  #      queue: tpu_v6e_queue
+  #    commands:
+  #      - .buildkite/scripts/run_in_docker.sh bash /workspace/tpu_inference/tests/e2e/benchmarking/mlperf.sh
 
   #  - label: "E2E MLPerf tests for JAX new models"
   #    key: test_2

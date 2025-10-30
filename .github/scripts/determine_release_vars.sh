@@ -60,7 +60,7 @@ elif [[ "$GH_EVENT_NAME" == "push" && "$GH_REF" == refs/tags/* ]]; then
 elif [[ "$GH_EVENT_NAME" == "push" && "$GH_REF" == refs/heads/* ]]; then
     echo "Trigger: Push Branch (${GH_REF_NAME}) - Defaulting to nightly 0.1.0 base"
     RELEASE_TYPE="nightly"
-    BASE_VERSION="0.1.0"
+    BASE_VERSION="0.11.1a1"
     echo "Using default BASE_VERSION=${BASE_VERSION}"
     DATETIME_STR=$(date -u +%Y%m%d%H%M)
     VERSION="${BASE_VERSION}.dev${DATETIME_STR}"
